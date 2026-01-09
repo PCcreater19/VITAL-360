@@ -1,0 +1,8 @@
+{
+  "name": "Vital 360 AI Health Intelligence",
+  "description": "A comprehensive AI-powered health platform featuring biometric scanning, 3D body analysis, and personalized wellness recommendations including home remedies, nutrition, and personality development.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
