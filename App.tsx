@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
@@ -22,11 +23,20 @@ import Recommendations from './components/Recommendations';
 import PersonalityDevelopment from './components/PersonalityDevelopment';
 import DailyCheckup from './components/DailyCheckup';
 import BodyAnalysis3D from './components/BodyAnalysis3D';
+import Onboarding from './components/Onboarding';
+
+interface UserProfile {
+  name: string;
+  age: string;
+  gender: string;
+  goal: string;
+}
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [scanComplete, setScanComplete] = useState(false);
   const [scanData, setScanData] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const navigation = [
     { id: 'dashboard', name: 'Health 360', icon: LayoutDashboard },
@@ -37,8 +47,12 @@ const App: React.FC = () => {
     { id: 'checkup', name: 'Daily Check', icon: Stethoscope },
   ];
 
+  if (!userProfile) {
+    return <Onboarding onComplete={(profile) => setUserProfile(profile)} />;
+  }
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen animate-fadeIn">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 flex-col glass border-r border-white/10 p-6 fixed h-full z-50">
         <div className="flex items-center gap-2 mb-10">
@@ -67,15 +81,15 @@ const App: React.FC = () => {
 
         <div className="mt-auto pt-6 border-t border-white/10">
           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl mb-4">
-            <img src="https://picsum.photos/seed/user123/100/100" className="w-10 h-10 rounded-full border border-white/20" alt="Profile" />
+            <img src={`https://picsum.photos/seed/${userProfile.name}/100/100`} className="w-10 h-10 rounded-full border border-white/20" alt="Profile" />
             <div>
-              <p className="text-sm font-semibold text-white">Alex Jensen</p>
-              <p className="text-xs text-gray-500">Premium Health ID</p>
+              <p className="text-sm font-semibold text-white truncate max-w-[120px]">{userProfile.name}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{userProfile.goal}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-green-500 font-medium bg-green-500/10 p-2 rounded-lg">
+          <div className="flex items-center gap-2 text-[10px] text-green-500 font-bold bg-green-500/10 p-2 rounded-lg border border-green-500/10">
             <ShieldCheck className="w-4 h-4" />
-            <span>Encrypted AI Privacy Active</span>
+            <span>AI PRIVACY SECURED</span>
           </div>
         </div>
       </aside>
