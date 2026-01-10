@@ -1,16 +1,17 @@
-
 import React, { useState, useRef } from 'react';
-import { Mic, Square, Loader2, MessageSquareText, Activity } from 'lucide-react';
+import { Mic, Square, Loader2, MessageSquareText, Activity, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 const AudioTranscriber: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
+    setPermissionError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -31,8 +32,13 @@ const AudioTranscriber: React.FC = () => {
       mediaRecorder.start();
       setIsRecording(true);
       setTranscript(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Microphone access denied", err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDismissedError') {
+        setPermissionError("Microphone access was dismissed or blocked. Please allow access to log symptoms via voice.");
+      } else {
+        setPermissionError("Could not access microphone. Please check your audio settings.");
+      }
     }
   };
 
@@ -95,35 +101,56 @@ const AudioTranscriber: React.FC = () => {
         )}
       </div>
 
-      <div className="flex items-center gap-4">
-        {!isRecording ? (
+      {permissionError ? (
+        <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fadeIn">
+          <div className="flex items-start gap-3 mb-4">
+            <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs text-red-400 font-bold uppercase tracking-tight mb-1">Microphone Blocked</p>
+              <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
+                {permissionError}
+              </p>
+            </div>
+          </div>
           <button 
             onClick={startRecording}
-            disabled={isTranscribing}
-            className="p-4 bg-blue-600 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-red-500/20 active:scale-95"
           >
-            <Mic className="w-6 h-6 text-white" />
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry Access
           </button>
-        ) : (
-          <button 
-            onClick={stopRecording}
-            className="p-4 bg-red-600 rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 active:scale-95"
-          >
-            <Square className="w-6 h-6 text-white" />
-          </button>
-        )}
-        
-        <div className="flex-1">
-          <p className="text-sm text-gray-200 font-medium leading-tight">
-            {isRecording ? "Listening to your report..." : isTranscribing ? "Gemini AI is analyzing..." : "Log symptoms via voice."}
-          </p>
-          <p className="text-[11px] text-gray-500 mt-0.5">
-            Auto-transcription powered by Flash Intelligence.
-          </p>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-4">
+          {!isRecording ? (
+            <button 
+              onClick={startRecording}
+              disabled={isTranscribing}
+              className="p-4 bg-blue-600 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+            >
+              <Mic className="w-6 h-6 text-white" />
+            </button>
+          ) : (
+            <button 
+              onClick={stopRecording}
+              className="p-4 bg-red-600 rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 active:scale-95"
+            >
+              <Square className="w-6 h-6 text-white" />
+            </button>
+          )}
+          
+          <div className="flex-1">
+            <p className="text-sm text-gray-200 font-medium leading-tight">
+              {isRecording ? "Listening to your report..." : isTranscribing ? "Gemini AI is analyzing..." : "Log symptoms via voice."}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              Auto-transcription powered by Flash Intelligence.
+            </p>
+          </div>
+        </div>
+      )}
 
-      {(transcript || isTranscribing) && (
+      {(transcript || isTranscribing) && !permissionError && (
         <div className="mt-4 p-4 bg-white/5 rounded-2xl border border-white/10 relative overflow-hidden">
           {isTranscribing ? (
             <div className="flex items-center gap-3 text-blue-400 py-2">
